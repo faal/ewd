@@ -1,5 +1,5 @@
 
--module(erl_webdriver_sup).
+-module(ewd_sup).
 
 -behaviour(supervisor).
 

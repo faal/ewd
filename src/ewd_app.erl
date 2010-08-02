@@ -1,4 +1,4 @@
--module(erl_webdriver_app).
+-module(ewd_app).
 
 -behaviour(application).
 
@@ -10,7 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    erl_webdriver_sup:start_link().
+    ewd_sup:start_link().
 
 stop(_State) ->
     ok.

@@ -1,4 +1,4 @@
-{application, erl_webdriver,
+{application, ewd,
  [
   {description, ""},
   {vsn, "1"},
@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { erl_webdriver_app, []}},
+  {mod, { ewd_app, []}},
   {env, []}
  ]}.
