@@ -28,12 +28,12 @@ public class Server {
 	OtpErlangTuple msg;
 	OtpErlangPid from;
 	while (true) {
-	    System.out.println("wait\n");
+	    System.out.println("wait");
 	    o = mbox.receive();
-	    System.out.println("received\n");
-	    
+	    System.out.println("received");
+	    System.out.println("testing 123");
 	    if (o instanceof OtpErlangTuple) {
-
+		
 		msg = (OtpErlangTuple)o;
 		from = (OtpErlangPid)(msg.elementAt(0));
 		OtpErlangAtom fun = (OtpErlangAtom)(msg.elementAt(1));
