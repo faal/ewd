@@ -10,19 +10,30 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/0, new/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--define(SERVER, ?MODULE). 
+-define(SERVER, ?MODULE).
+-define(NODE, 'WD@localhost').
 
 -record(state, {port}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Create a new web_driver instance of Type
+%%
+%% @spec new(Type :: firefox) -> instance()
+%%--------------------------------------------------------------------
+new(Type) ->
+    Args = [{type, Type}],
+    gen_server:call(?SERVER, {new, Args}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -50,9 +61,14 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    %% should get app path somehow.
-%    Dir = filename:join(code:priv_dir(ewd), ".."),
-    Port = erlang:open_port({spawn, "java -cp \".:./java_src/obj/:./java_src/lib/*\" WD"}, []),
+    process_flag(trap_exit, true),
+    io:format("starting child~n"),
+    Dir = filename:dirname(code:priv_dir(ewd)),
+    Obj = filename:join(Dir, "java_src/obj/"),
+    Lib = filename:join(Dir, "java_src/lib/*"),
+    Path = string:join([".", Obj, Lib], ":"),
+    Cmd = "java -cp \"" ++ Path ++ "\" WD",
+    Port = erlang:open_port({spawn, Cmd}, []),
     {ok, #state{port = Port}}.
 
 %%--------------------------------------------------------------------
@@ -69,9 +85,9 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
+handle_call({new, Args}, _From, State) ->
+    Pid = call(new, Args),
+    {reply, Pid, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -110,7 +126,9 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    io:format("ewd_server terminating~n"),
+    cast(stop, undefined),
     ok.
 
 %%--------------------------------------------------------------------
@@ -128,3 +146,12 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
+call(Fun, Args) ->
+    io:format("sending message~n"),
+    {server, ?NODE} ! {self(), Fun, test},
+    io:format("receiving message~n"),
+    receive Msg -> Msg end.
+
+cast(Fun, Args) ->
+    io:format("sending message~n"),
+    {server, ?NODE} ! {self(), Fun, test}.
