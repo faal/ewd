@@ -130,23 +130,13 @@ reload(Module, Filename) ->
     case code:load_file(Module) of
         {module, Module} ->
             test(Module),
-            dialyze(Filename);
+            dialyze(Filename),
+            xref(Module);
         {error, Reason} ->
             io:format(" fail: ~p.~n", [Reason]),
             error
     end.
 
-dialyze(Filename) ->
-    case dialyzer:run([{files, [Filename]}]) of
-        [] ->
-            io:format(" - Dialyzer: OK~n");
-        Warnings ->
-            io:format(" - Dialyzer: Warnings~n"),
-            lists:foreach(fun(W) ->
-                                  S = dialyzer:format_warning(W),
-                                  io:format(S)
-                          end, Warnings)
-    end.
 
 test(Module) ->
     case erlang:function_exported(Module, test, 0) of
@@ -163,6 +153,39 @@ test(Module) ->
             io:format(" - Eunit: test() not found.~n"),
             reload
     end.
+
+dialyze(Filename) ->
+    case dialyzer:run([{files, [Filename]}]) of
+        [] ->
+            io:format(" - Dialyzer: OK~n");
+        Warnings ->
+            io:format(" - Dialyzer: Warning~n"),
+            lists:foreach(fun(W) ->
+                                  S = dialyzer:format_warning(W),
+                                  io:format(S)
+                          end, Warnings)
+    end.
+
+xref(Module) ->
+    io:format(" - Xref: "),
+    xref_print(xref:m(Module)).
+
+xref_print([{deprecated,[]},{undefined,[]},{unused,[]}]) ->
+    io:format("OK~n");
+
+xref_print([Depreceated, Undefined, Unused]) ->
+    io:format("Warning~n"),
+    Print = fun({Type, Calls}) ->
+                    case Calls of
+                        [] ->
+                            ok;
+                        Calls ->
+                            io:format("Warning: ~p function calls~n", [Type]),
+                            [io:format("Call to ~p:~p/~p in ~p:~p/~p~n", [M2, F2, A2, M1, F1, A1]) 
+                             || {{M1, F1, A1}, {M2, F2, A2}} <- Calls]
+                    end
+            end,
+    [Print(X) || X <- [Depreceated, Undefined, Unused]].
 
 stamp() ->
     erlang:localtime().
