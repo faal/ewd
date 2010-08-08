@@ -1,2 +1,2 @@
 #!/bin/bash
-erl -sname test@localhost -pa ebin/ deps/*/ebin/ -setcookie Yjb5XSNf -run reloader start
+erl -sname test@localhost -pa `pwd`/ebin/ deps/*/ebin/ -run reloader start
