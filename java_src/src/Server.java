@@ -1,5 +1,7 @@
 import java.io.*;
 
+import java.util.UUID;
+
 import com.ericsson.otp.erlang.*;
 
 import org.openqa.selenium.By;
@@ -33,25 +35,29 @@ public class Server {
 	    System.out.println("received");
 	    System.out.println("testing 123");
 	    if (o instanceof OtpErlangTuple) {
-		
 		msg = (OtpErlangTuple)o;
 		from = (OtpErlangPid)(msg.elementAt(0));
 		OtpErlangAtom fun = (OtpErlangAtom)(msg.elementAt(1));
 		OtpErlangAtom arg = (OtpErlangAtom)(msg.elementAt(2));
-		execute(fun.toString());
-		mbox.send(from,fun);
+		OtpErlangObject ret = execute(fun.toString());
+		mbox.send(from, fun);
 	    }
 	}
 
     }
 
-    public void execute(String fun) throws java.io.IOException {
+    public OtpErlangObject execute(String fun) throws java.io.IOException {
 	System.out.println(fun);
 	if (fun.compareTo("new") == 0) {
 	    WebDriver driver = new FirefoxDriver();
+	    UUID id = UUID.randomUUID();
+	    System.out.println(id);
+	    return new OtpErlangBinary(id);
 	} else if (fun.compareTo("stop") == 0) {
 	    System.exit(0);
-	};
+	}
+	return null;
+
     }
 
 }
