@@ -112,7 +112,8 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info(_Info, State) ->
+handle_info({Port, {data, Data}}, #state{port = Port} = State) ->
+    [io:format("Port: ~p~n", [X]) || X <- string:tokens(Data, "\n")],
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -126,7 +127,7 @@ handle_info(_Info, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, State) ->
+terminate(_Reason, _State) ->
     io:format("ewd_server terminating~n"),
     cast(stop, undefined),
     ok.
