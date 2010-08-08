@@ -33,7 +33,7 @@
 %%--------------------------------------------------------------------
 new(Type) ->
     Args = [{type, Type}],
-    gen_server:call(?SERVER, {new, Args}).
+    gen_server:call(?SERVER, {new, Args}, 15000).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -86,7 +86,7 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_call({new, Args}, _From, State) ->
-    Pid = call(new, Args),
+    Pid = call(new, Args, State),
     {reply, Pid, State}.
 
 %%--------------------------------------------------------------------
@@ -113,7 +113,7 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info({Port, {data, Data}}, #state{port = Port} = State) ->
-    [io:format("Port: ~p~n", [X]) || X <- string:tokens(Data, "\n")],
+    [io:format("Port: ~s~n", [X]) || X <- string:tokens(Data, "\n")],
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -147,11 +147,17 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-call(Fun, Args) ->
+call(Fun, Args, State) ->
     io:format("sending message~n"),
     {server, ?NODE} ! {self(), Fun, test},
+    rec(Fun, Args, State).
+
+rec(Fun, Args, State) ->
     io:format("receiving message~n"),
-    receive Msg -> Msg end.
+    receive Fun -> Fun;
+            Msg -> handle_info(Msg, State),
+                   rec(Fun, Args, State)
+    end.
 
 cast(Fun, Args) ->
     io:format("sending message~n"),
