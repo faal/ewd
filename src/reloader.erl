@@ -180,12 +180,16 @@ xref_print([Depreceated, Undefined, Unused]) ->
                         [] ->
                             ok;
                         Calls ->
-                            io:format("Warning: ~p function calls~n", [Type]),
-                            [io:format("Call to ~p:~p/~p in ~p:~p/~p~n", [M2, F2, A2, M1, F1, A1]) 
-                             || {{M1, F1, A1}, {M2, F2, A2}} <- Calls]
+                            io:format(" - Warning: ~p function calls~n", [Type]),
+                            [print_call(X) || X <- Calls]
                     end
             end,
     [Print(X) || X <- [Depreceated, Undefined, Unused]].
+
+print_call({{M1, F1, A1}, {M2, F2, A2}}) ->
+    io:format("Call to ~p:~p/~p in ~p:~p/~p~n", [M2, F2, A2, M1, F1, A1]);
+print_call({M, F, A}) ->
+    io:format("~p:~p/~p~n", [M, F, A]).
 
 stamp() ->
     erlang:localtime().
