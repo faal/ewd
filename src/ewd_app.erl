@@ -13,4 +13,5 @@ start(_StartType, _StartArgs) ->
     ewd_sup:start_link().
 
 stop(_State) ->
-    ok.
+    exit(whereis(ewd_sup), shutdown).
+
