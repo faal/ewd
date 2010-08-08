@@ -6,5 +6,5 @@ OUTPUT = -d ./obj/
 JFLAGS = -g $(CP) $(OUTPUT)
 
 
-default : 
+default :
 	$(JCC) $(JFLAGS) src/WD.java src/Server.java
