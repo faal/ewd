@@ -15,16 +15,17 @@ public class Server {
 
     private BufferedWriter out;
 
-    public void start() throws java.io.IOException, 
+    private static String COOKIE = "Yjb5XSNf";
+
+    private static String MBOX = "server";
+    public void start() throws java.io.IOException,
 			       com.ericsson.otp.erlang.OtpErlangExit,
 			       com.ericsson.otp.erlang.OtpErlangDecodeException {
 	FileWriter fstream = new FileWriter("out.txt");
         out = new BufferedWriter(fstream);
-	node = new OtpNode("WD@localhost", "Yjb5XSNf");
-	OtpMbox mbox = node.createMbox("server");
+	node = new OtpNode("WD@localhost", COOKIE);
+	OtpMbox mbox = node.createMbox(MBOX);
 	System.out.println("Starting\n");
-
-	System.out.println("test\n");
 
 	OtpErlangObject o;
 	OtpErlangTuple msg;
@@ -33,30 +34,37 @@ public class Server {
 	    System.out.println("wait");
 	    o = mbox.receive();
 	    System.out.println("received");
-	    System.out.println("testing 123");
 	    if (o instanceof OtpErlangTuple) {
 		msg = (OtpErlangTuple)o;
 		from = (OtpErlangPid)(msg.elementAt(0));
 		OtpErlangAtom fun = (OtpErlangAtom)(msg.elementAt(1));
-		OtpErlangAtom arg = (OtpErlangAtom)(msg.elementAt(2));
-		OtpErlangObject ret = execute(fun.toString());
-		mbox.send(from, fun);
+		OtpErlangObject arg = (OtpErlangObject)(msg.elementAt(2));
+		execute(node, mbox, from, fun);
 	    }
 	}
 
     }
 
-    public OtpErlangObject execute(String fun) throws java.io.IOException {
+    public void execute(OtpNode node, OtpMbox mbox,
+			OtpErlangPid from, OtpErlangAtom fun0) throws java.io.IOException {
+	String fun = fun0.toString();
 	System.out.println(fun);
 	if (fun.compareTo("new") == 0) {
-	    WebDriver driver = new FirefoxDriver();
+	    Instance instance = new Instance(node);
+
 	    UUID id = UUID.randomUUID();
 	    System.out.println(id);
-	    return new OtpErlangBinary(id);
+	    mbox.send(from, new OtpErlangTuple (
+						new OtpErlangObject[] {
+						    new OtpErlangAtom(MBOX),
+						    fun0,
+						    instance.get_pid()}
+						));
+
+
 	} else if (fun.compareTo("stop") == 0) {
 	    System.exit(0);
 	}
-	return null;
 
     }
 
