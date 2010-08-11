@@ -7,4 +7,4 @@ JFLAGS = -g $(CP) $(OUTPUT)
 
 
 default :
-	$(JCC) $(JFLAGS) src/WD.java src/Server.java
+	$(JCC) $(JFLAGS) src/WD.java src/Server.java src/Instance.java
