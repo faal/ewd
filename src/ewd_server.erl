@@ -8,32 +8,21 @@
 -module(ewd_server).
 
 -behaviour(gen_server).
-
+-compile(export_all).
 %% API
--export([start_link/0, new/1]).
+-export([start_link/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--define(SERVER, ?MODULE).
--define(NODE, 'WD@localhost').
+-define(SUPERVISOR, ewd_sup).
 
--record(state, {port}).
+-record(state, {port, pid}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Create a new web_driver instance of Type
-%%
-%% @spec new(Type :: firefox) -> instance()
-%%--------------------------------------------------------------------
-new(Type) ->
-    Args = [{type, Type}],
-    gen_server:call(?SERVER, {new, Args}, 15000).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -43,7 +32,7 @@ new(Type) ->
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -69,7 +58,7 @@ init([]) ->
     Path = string:join([".", Obj, Lib], ":"),
     Cmd = "java -cp \"" ++ Path ++ "\" WD",
     Port = erlang:open_port({spawn, Cmd}, []),
-    {ok, #state{port = Port}}.
+    {ok, #state{pid = server, port = Port}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -85,9 +74,13 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({new, Args}, _From, State) ->
-    Pid = call(new, Args, State),
-    {reply, Pid, State}.
+handle_call({new, Arg}, _From, #state{pid = Pid} = State) ->
+    InstancePid = ewd:call(Pid, new, Arg),
+    erlang:display("received Pid"),
+    {ok, LocalPid} = supervisor:start_child(?SUPERVISOR, 
+                                             instance_child(pid_to_list(InstancePid), 
+                                                            InstancePid)),
+    {reply, LocalPid, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -127,9 +120,9 @@ handle_info({Port, {data, Data}}, #state{port = Port} = State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
+terminate(_Reason, #state{pid = Pid}) ->
     io:format("ewd_server terminating~n"),
-    cast(stop, undefined),
+    ewd:cast(Pid, stop, []),
     ok.
 
 %%--------------------------------------------------------------------
@@ -147,18 +140,5 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
-call(Fun, Args, State) ->
-    io:format("sending message~n"),
-    {server, ?NODE} ! {self(), Fun, test},
-    rec(Fun, Args, State).
-
-rec(Fun, Args, State) ->
-    io:format("receiving message~n"),
-    receive Fun -> Fun;
-            Msg -> handle_info(Msg, State),
-                   rec(Fun, Args, State)
-    end.
-
-cast(Fun, Args) ->
-    io:format("sending message~n"),
-    {server, ?NODE} ! {self(), Fun, test}.
+instance_child(Id, Args) ->
+    {Id, {ewd_instance, start_link, [Args]}, temporary, 10000, worker, [ewd_instance]}.
