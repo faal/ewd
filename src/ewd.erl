@@ -1,6 +1,8 @@
 -module(ewd).
 
--export([start/0, stop/0, restart/0, new/0, new/1, get/2, call/3, cast/3, get_current_url/1, get_title/1]).
+-export([start/0, stop/0, restart/0, new/0, new/1, get/2, call/3, cast/3, get_current_url/1, get_title/1, close/1, quit/1, get_page_src/1, get_window/1, get_windows/1, back/1]).
+
+-export([forward/1, refresh/1, target_window/2]).
 
 -define(SERVER, ewd_server).
 -define(NODE, 'WD@localhost').
@@ -12,9 +14,6 @@ start() ->
 
 stop() ->
     application:stop(ewd).
-
-stop(Instance) ->
-    gen_server:call(Instance, {stop, []}, ?TIMEOUT).
 
 restart() ->
     application:stop(ewd),
@@ -43,8 +42,37 @@ get_current_url(Instance) ->
 
 get_title(Instance) ->
     gen_server:call(Instance, {get_title, []}, ?TIMEOUT).
+
+close(Instance) ->
+    gen_server:call(Instance, {close, []}, ?TIMEOUT).
+
+quit(Instance) ->
+    gen_server:call(Instance, {quit, []}, ?TIMEOUT).
+
+get_page_src(Instance) ->
+    gen_server:call(Instance, {get_page_src, []}, ?TIMEOUT).
+
+get_window(Instance) ->
+    gen_server:call(Instance, {get_window, []}, ?TIMEOUT).
+
+get_windows(Instance) ->
+    gen_server:call(Instance, {get_windows, []}, ?TIMEOUT).
+
+back(Instance) ->
+    gen_server:call(Instance, {back, []}, ?TIMEOUT).
+
+forward(Instance) ->
+    gen_server:call(Instance, {forward, []}, ?TIMEOUT).
+
+refresh(Instance) ->
+    gen_server:call(Instance, {refresh, []}, ?TIMEOUT).
+
+target_window(Instance, Window) ->
+    gen_server:call(Instance, {target_window, Window}, ?TIMEOUT).
+
 call(Pid, Fun, Arg) when is_atom(Pid) ->
     call({Pid, ?NODE}, Fun, Arg);
+
 
 call(Pid, Fun, Arg) ->
     io:format("sending message~n"),
