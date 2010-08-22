@@ -9,6 +9,10 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class WD {
+    public enum InstanceType {
+	FIREFOX, CHROME
+	    }
+
     public static void main(String[] args)  {
 	Server server = new Server();
 	try {

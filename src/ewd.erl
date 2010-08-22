@@ -23,8 +23,7 @@ new() ->
     new(firefox).
 
 new(Type) ->
-    Args = [{type, Type}],
-    gen_server:call(?SERVER, {new, Args}, 15000).
+    gen_server:call(?SERVER, {new, Type}, 15000).
 
 
 

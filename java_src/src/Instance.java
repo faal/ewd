@@ -1,7 +1,9 @@
 import com.ericsson.otp.erlang.*;
 
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.WebDriver;
+
 
 import java.util.*;
 
@@ -9,9 +11,13 @@ public class Instance extends Thread {
     OtpMbox mbox;
     WebDriver driver;
 
-    Instance(OtpNode node) {
+    Instance(OtpNode node, WD.InstanceType type) {
 	mbox = node.createMbox();
-	driver = new FirefoxDriver();
+	switch (type) {
+	case FIREFOX: driver = new FirefoxDriver(); break;
+	case CHROME: driver = new ChromeDriver(); break;
+	}
+	
 	start();
     }
 
