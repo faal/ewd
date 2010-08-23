@@ -73,6 +73,11 @@ public class Instance extends Thread {
 	return uuid;
 	
     }
+    
+    private WebElement get_elem(String S) {
+	Object[] val = (Object [])elements.get(S);
+	return (WebElement)val[0];
+    }
 
     public void execute(OtpMbox mbox, OtpErlangPid from,
 			OtpErlangAtom fun0, OtpErlangObject Arg) {
@@ -170,6 +175,9 @@ public class Instance extends Thread {
 						new OtpErlangAtom("no_elem")
 					    });
 		    }
+	} else if (fun.compareTo("get_text") == 0) {
+	    String ID = ((OtpErlangAtom)Arg).atomValue();
+	    ret[2] = new OtpErlangString(get_elem(ID).getText());
 	}
 
 	mbox.send(from, new OtpErlangTuple(ret));
