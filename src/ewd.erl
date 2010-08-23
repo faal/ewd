@@ -4,9 +4,12 @@
 
 -export([forward/1, refresh/1, target_window/2]).
 
+-export([elem_by_id/2, elems_by_id/2]).
+
+-include("../include/ewd.hrl").
+
 -define(SERVER, ewd_server).
 -define(NODE, 'WD@localhost').
--define(TIMEOUT, 15000).
 
 start() ->
     erlang:set_cookie(node(), 'Yjb5XSNf'),
@@ -23,8 +26,7 @@ new() ->
     new(firefox).
 
 new(Type) ->
-    gen_server:call(?SERVER, {new, Type}, 15000).
-
+    gen_server:call(?SERVER, {new, Type}, ?TIMEOUT).
 
 sync() ->
     gen_server:call(?SERVER, sync, ?TIMEOUT).
@@ -71,6 +73,13 @@ refresh(Instance) ->
 target_window(Instance, Window) ->
     gen_server:call(Instance, {target_window, Window}, ?TIMEOUT).
 
+
+elem_by_id(Instance, ID) ->
+    gen_server:call(Instance, {elem_by_id, ID}, ?TIMEOUT).
+
+elems_by_id(Instance, ID) ->
+    gen_server:call(Instance, {elems_by_id, ID}, ?TIMEOUT).
+
 call(Pid, Fun, Arg) when is_atom(Pid) ->
     call({Pid, ?NODE}, Fun, Arg);
 
@@ -92,3 +101,35 @@ cast(Pid, Fun, Arg) ->
     io:format("sending message~n"),
     {Pid, ?NODE} ! {self(), Fun, Arg},
     ok.
+
+
+-include_lib("eunit/include/eunit.hrl").
+
+
+all_test_() ->
+    {setup,
+     fun start/0,
+     fun(_) -> stop() end,
+     [{timeout, 60, [?_test(t_find_elem())]},
+      {timeout, 60, [?_test(t_find_elems())]}]
+    }.
+    
+
+t_find_elem() ->
+    WD = new(firefox),
+    get(WD, "http://www.reddit.com"),
+    {ok, Elem} = elem_by_id(WD, "header"),
+    {ok, Elem2} = elem_by_id(WD, "header"),
+    {ok, Elem3} = elem_by_id(WD, "header"),
+    {ok, Elem4} = elem_by_id(WD, "header"),
+    quit(WD),
+    ?debugMsg(Elem),
+    ?debugMsg(Elem2).
+
+t_find_elems() ->
+    WD = new(firefox),
+    get(WD, "http://www.reddit.com"),
+    {ok, Elem} = elems_by_id(WD, "header"),
+    quit(WD),
+    ?debugFmt("~p~n", [Elem]).
+    

@@ -3,13 +3,15 @@ import com.ericsson.otp.erlang.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.WebDriver;
-
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import java.util.*;
 
 public class Instance extends Thread {
     OtpMbox mbox;
     WebDriver driver;
+    Hashtable elements = new Hashtable();
 
     Instance(OtpNode node, WD.InstanceType type) {
 	mbox = node.createMbox();
@@ -24,15 +26,16 @@ public class Instance extends Thread {
     public void run() {
 	while (true) {
 	    try {
-		System.out.println("Instance waiting");
 		OtpErlangObject o = mbox.receive();
-		System.out.println("received");
 		OtpErlangTuple msg;
 		OtpErlangPid from;
 		msg = (OtpErlangTuple)o;
 		from = (OtpErlangPid)(msg.elementAt(0));
 		OtpErlangAtom fun = (OtpErlangAtom)(msg.elementAt(1));
 		OtpErlangObject arg = (OtpErlangObject)(msg.elementAt(2));
+		System.out.println("pre decay");
+		decay();
+		System.out.println("post decay");
 		execute(mbox, from, fun, arg);
 	    }
 	    catch (OtpErlangExit e) {
@@ -45,10 +48,32 @@ public class Instance extends Thread {
     }
 
     public OtpErlangPid get_pid() {
-
 	return mbox.self();
-
     }
+
+    private void decay() {
+	Enumeration keys = elements.keys();
+	while(keys.hasMoreElements()) {
+	    Object key = keys.nextElement();
+	    Object[] elem = (Object[])elements.get(key);
+	    elem[1] = new Integer(((Integer)elem[1]).intValue() -1);
+	    if (((Integer)elem[1]).intValue() == 0) {
+		elements.remove(key);
+	    }
+	    System.out.println(elem[0]);
+	    System.out.println(elem[1].toString());	    
+
+	}
+    }
+    
+    private UUID insert_elem(WebElement elem) {
+	UUID uuid = UUID.randomUUID();
+	elements.put(uuid.toString(), new Object[] {elem,
+						    new Integer(3)});
+	return uuid;
+	
+    }
+
     public void execute(OtpMbox mbox, OtpErlangPid from,
 			OtpErlangAtom fun0, OtpErlangObject Arg) {
 	OtpErlangObject[] ret = new OtpErlangObject[] {
@@ -57,9 +82,9 @@ public class Instance extends Thread {
 	    null
 	};
 	String fun = fun0.toString();
+	System.out.println("running" + fun);
 	if (fun.compareTo("get") == 0) {
 	    String url = ((OtpErlangString)Arg).stringValue();
-	    System.out.println(url);
 	    driver.get(url);
 	    ret[2] = new OtpErlangAtom("ok");
 	} else if (fun.compareTo("get_current_url") == 0) {
@@ -99,6 +124,53 @@ public class Instance extends Thread {
 	    ret[2] = new OtpErlangAtom("ok");
 	}
 
+	/* Element interaction functions*/
+	else if (fun.compareTo("elem_by_id") == 0) {
+	    String id = ((OtpErlangString)Arg).stringValue();
+	    try {
+		WebElement elem = driver.findElement(By.id(id));
+		UUID uuid = insert_elem(elem);
+		ret[2] = new OtpErlangTuple(
+					    new OtpErlangObject[] {
+						new OtpErlangAtom("ok"),
+						new OtpErlangAtom(uuid.toString())
+					    });
+	    }
+
+	    catch (org.openqa.selenium.NoSuchElementException e) {
+		ret[2] = new OtpErlangTuple(
+					    new OtpErlangObject[] {
+						new OtpErlangAtom("error"),
+						new OtpErlangAtom("no_elem")
+					    });
+		    }
+	} else if (fun.compareTo("elems_by_id") == 0) {
+	    String id = ((OtpErlangString)Arg).stringValue();
+	    try {
+		List<WebElement> elems = driver.findElements(By.id(id));
+		Iterator itr = elems.iterator();
+		List<OtpErlangAtom> result = new LinkedList<OtpErlangAtom> ();
+		while (itr.hasNext()) {
+		    UUID uuid = insert_elem((WebElement)itr.next());
+		    result.add(new OtpErlangAtom(uuid.toString()));
+		    
+		}
+		
+		ret[2] = new OtpErlangTuple(
+					    new OtpErlangObject[] {
+						new OtpErlangAtom("ok"),
+						new OtpErlangList(result.toArray(new OtpErlangAtom[0]))
+					    });
+	    }
+
+	    catch (org.openqa.selenium.NoSuchElementException e) {
+		ret[2] = new OtpErlangTuple(
+					    new OtpErlangObject[] {
+						new OtpErlangAtom("error"),
+						new OtpErlangAtom("no_elem")
+					    });
+		    }
+	}
 
 	mbox.send(from, new OtpErlangTuple(ret));
 
