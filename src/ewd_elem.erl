@@ -4,7 +4,7 @@
 
 -include("../include/ewd.hrl").
 
--export([get_text/2]).
+-export([text/2]).
 
 
 text(Instance, Elem) ->
@@ -17,13 +17,13 @@ all_test_() ->
     {setup,
      fun ewd:start/0,
      fun(_) -> ewd:stop() end,
-     [{timeout, 60, [?_test(t_get_text())]}]}.
+     [{timeout, 60, [?_test(t_text())]}]}.
 
-t_get_text() ->
+t_text() ->
     WD = ewd:new(firefox),
     ewd:get(WD, "http://www.reddit.com"),
     {ok, Elem} = ewd:elem_by_id(WD, "siteTable"),
-    Text = get_text(WD, Elem),
+    Text = text(WD, Elem),
     ewd:quit(WD),
     ?debugMsg(Elem),
     ?debugMsg(Text).
