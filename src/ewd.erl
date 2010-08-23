@@ -1,6 +1,6 @@
 -module(ewd).
 
--export([start/0, stop/0, restart/0, new/0, new/1, get/2, call/3, cast/3, get_current_url/1, get_title/1, close/1, quit/1, get_page_src/1, get_window/1, get_windows/1, back/1]).
+-export([start/0, stop/0, restart/0, new/0, new/1, get/2, call/3, cast/3, get_current_url/1, get_title/1, close/1, quit/1, get_page_src/1, get_window/1, get_windows/1, back/1, sync/0]).
 
 -export([forward/1, refresh/1, target_window/2]).
 
