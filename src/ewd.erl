@@ -113,25 +113,49 @@ all_test_() ->
      fun start/0,
      fun(_) -> stop() end,
      [{timeout, 60, [?_test(t_find_elem())]},
-      {timeout, 60, [?_test(t_find_elems())]}]
+      {timeout, 60, [?_test(t_find_elems())]},
+      {timeout, 60, [?_test(t_navigation())]}]
     }.
     
 
 t_find_elem() ->
     WD = new(firefox),
     get(WD, "http://www.reddit.com"),
-    {ok, Elem} = elem_by_id(WD, "header"),
-    {ok, Elem2} = elem_by_id(WD, "header"),
-    {ok, Elem3} = elem_by_id(WD, "header"),
-    {ok, Elem4} = elem_by_id(WD, "header"),
-    quit(WD),
-    ?debugMsg(Elem),
-    ?debugMsg(Elem2).
+    %% This test should be improved
+    {ok, _Elem} = elem_by_id(WD, "header"),
+    {ok, _Elem2} = elem_by_id(WD, "header"),
+    {ok, _Elem3} = elem_by_id(WD, "header"),
+    {ok, _Elem4} = elem_by_id(WD, "header"),
+    quit(WD).
 
 t_find_elems() ->
     WD = new(firefox),
     get(WD, "http://www.reddit.com"),
-    {ok, Elem} = elems_by_id(WD, "header"),
-    quit(WD),
-    ?debugFmt("~p~n", [Elem]).
+    {ok, _Elem} = elems_by_id(WD, "header"),
+    quit(WD).
+
     
+t_navigation() ->
+    WD = new(firefox),
+    URL = "http://www.google.com/",
+    get(WD, URL),
+    ?assert(URL =:= current_url(WD)),
+    ?assert("Google" =:= title(WD)),
+    EmptyUrl = "http://www.duke.edu/~zjt3/",
+    get(WD, EmptyUrl),
+    Src = "<html><head>\n\n<title>Blank HTML Page</title>\n</head><body>\n\n"
+	"<center>\nBlank HTML Page\n</center>\n\n</body></html>",
+    ?assert(Src =:= page_src(WD)),
+    back(WD),
+    %% should be back on google.com
+    ?assert(URL =:= current_url(WD)),
+    forward(WD),
+    %% should be at emptypage
+    ?assert(EmptyUrl =:= current_url(WD)),
+    refresh(WD),
+    %% test setting window to current window
+    Window = window(WD),
+    target_window(WD, Window),
+    ?assert(Window =:= window(WD)),
+    ?assert([Window] =:= windows(WD)),
+    quit(WD).
