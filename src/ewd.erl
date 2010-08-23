@@ -26,6 +26,8 @@ new(Type) ->
     gen_server:call(?SERVER, {new, Type}, 15000).
 
 
+sync() ->
+    gen_server:call(?SERVER, sync, ?TIMEOUT).
 
 %%--------------------------------------------------------------------
 %% @doc

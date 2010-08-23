@@ -74,6 +74,10 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(sync, _From, #state{pid = Pid} = State) ->
+    ok = ewd:call(Pid, sync, unused),
+    {reply, ok, State};
+
 handle_call({new, Arg}, _From, #state{pid = Pid} = State) ->
     InstancePid = ewd:call(Pid, new, Arg),
     erlang:display("received Pid"),

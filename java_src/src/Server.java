@@ -49,7 +49,15 @@ public class Server {
 			OtpErlangObject arg) throws java.io.IOException {
 	String fun = fun0.toString();
 	System.out.println(fun);
-	if (fun.compareTo("new") == 0) {
+
+	if (fun.compareTo("sync") == 0) {
+	    mbox.send(from, new OtpErlangTuple (
+						new OtpErlangObject[] {
+						    new OtpErlangAtom(MBOX),
+						    fun0,
+						    new OtpErlangAtom("ok")}
+						));
+	} else if (fun.compareTo("new") == 0) {
 	    WD.InstanceType type = WD.InstanceType.FIREFOX;
 	    System.out.println(((OtpErlangAtom)arg).atomValue());
 	    if(((OtpErlangAtom)arg).atomValue().compareTo("firefox") == 0)
