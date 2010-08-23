@@ -7,8 +7,8 @@
 -export([get_text/2]).
 
 
-get_text(Instance, Elem) ->
-    gen_server:call(Instance, {get_text, Elem}, ?TIMEOUT).
+text(Instance, Elem) ->
+    gen_server:call(Instance, {text, Elem}, ?TIMEOUT).
 
 
 -include_lib("eunit/include/eunit.hrl").

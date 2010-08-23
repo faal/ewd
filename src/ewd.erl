@@ -1,6 +1,8 @@
 -module(ewd).
 
--export([start/0, stop/0, restart/0, new/0, new/1, get/2, call/3, cast/3, get_current_url/1, get_title/1, close/1, quit/1, get_page_src/1, get_window/1, get_windows/1, back/1, sync/0]).
+-export([start/0, stop/0, restart/0, new/0, new/1, get/2, call/3, cast/3, 
+	 current_url/1, title/1, close/1, quit/1, page_src/1, 
+	 window/1, windows/1, back/1, sync/0]).
 
 -export([forward/1, refresh/1, target_window/2]).
 
@@ -40,11 +42,11 @@ sync() ->
 get(Instance, URL) ->
     gen_server:call(Instance, {get, URL}, ?TIMEOUT).
 
-get_current_url(Instance) ->
-    gen_server:call(Instance, {get_current_url, []}, ?TIMEOUT).
+current_url(Instance) ->
+    gen_server:call(Instance, {current_url, []}, ?TIMEOUT).
 
-get_title(Instance) ->
-    gen_server:call(Instance, {get_title, []}, ?TIMEOUT).
+title(Instance) ->
+    gen_server:call(Instance, {title, []}, ?TIMEOUT).
 
 close(Instance) ->
     gen_server:call(Instance, {close, []}, ?TIMEOUT).
@@ -52,14 +54,14 @@ close(Instance) ->
 quit(Instance) ->
     gen_server:call(Instance, {quit, []}, ?TIMEOUT).
 
-get_page_src(Instance) ->
-    gen_server:call(Instance, {get_page_src, []}, ?TIMEOUT).
+page_src(Instance) ->
+    gen_server:call(Instance, {page_src, []}, ?TIMEOUT).
 
-get_window(Instance) ->
-    gen_server:call(Instance, {get_window, []}, ?TIMEOUT).
+window(Instance) ->
+    gen_server:call(Instance, {window, []}, ?TIMEOUT).
 
-get_windows(Instance) ->
-    gen_server:call(Instance, {get_windows, []}, ?TIMEOUT).
+windows(Instance) ->
+    gen_server:call(Instance, {windows, []}, ?TIMEOUT).
 
 back(Instance) ->
     gen_server:call(Instance, {back, []}, ?TIMEOUT).
