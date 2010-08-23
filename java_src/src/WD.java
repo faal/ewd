@@ -12,7 +12,16 @@ public class WD {
     public enum InstanceType {
 	FIREFOX, CHROME
 	    }
+    
+    public enum Fun {
+	GET, CURRENT_URL, TITLE, CLOSE, QUIT, PAGE_SRC,
+	    BACK, FORWARD, REFRESH, WINDOW, WINDOWS,
+	    TARGET_WINDOW,
 
+	    /* elem funcs */
+	    ELEM_BY_ID, ELEMS_BY_ID, TEXT
+	    }
+    
     public static void main(String[] args)  {
 	Server server = new Server();
 	try {
